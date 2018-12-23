@@ -17,7 +17,6 @@ LED_CHANNEL    = 0        # set to '1' for GPIOs 13, 19, 41, 45 or 53
 # Timing Configuration
 TIMING_CITY    = 'Berlin'       # City for gathering the sunset and sunrise times
 TIMING_TRANSITION = 3 * 60 * 60 # Transition time in seconds from night to sunset, sunset to day, ...
-SIM_ACTIVATE = True             # If day is simulated (simulate one day in a fcaction of time)
 SIM_DURATION = 5 * 60           # Duration of a simulated day
 
 # Color settings for time of the day
@@ -160,9 +159,9 @@ def getTimeOfDayInSecondsSimulated(dayDuration):
   simulatedDayTime = currentTimeSecondsSimulated * partsOfDay
   return simulatedDayTime
 
-def simulateDay(strip):
+def simulateDay(strip, sim_activate):
   while True:
-    if (SIM_ACTIVATE == True):
+    if (sim_activate == True):
       secondsInDay = getTimeOfDayInSecondsSimulated(SIM_DURATION)
     else:
       secondsInDay = getTimeOfDayInSeconds()
@@ -214,13 +213,12 @@ if __name__ == '__main__':
   parser.add_argument('-r', '--sunrise', action='store_true', help='sunrise mode')
   parser.add_argument('-d', '--day', action='store_true', help='day mode')
   parser.add_argument('-s', '--simulate', action='store_true', help='simulate day')
+  parser.add_argument('-q', '--quicksim', action='store_true', help='simulate day in 5 minutes')
   parser.add_argument('-o', '--off', action='store_true', help='switch off')
   args = parser.parse_args()
 
   strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
   strip.begin()
-
-  print(args)
 
   if args.night:
     nightMode(strip)
@@ -229,7 +227,9 @@ if __name__ == '__main__':
   elif args.day:
     dayMode(strip)
   elif args.simulate:
-    simulateDay(strip)
+    simulateDay(strip, False)
+  elif args.quicksim:
+    simulateDay(strip, True)
   elif args.off:
     monoColor(strip, Color(0,0,0))
   else:
