@@ -17,7 +17,7 @@ cd led-wall-picture
 pip install -r requirements.txt
 ```
 
-## Start app
+## Start app via CLI
 
 ### Start with all-white for testing
 
@@ -44,7 +44,7 @@ sudo python picture.py -s # or --simulate
                        -q # or --quicksim (simulates one day every 5 minutes)
 ```
 
-## Web-App
+## Setup and run Web Server
 
 Install Node
 ```bash
