@@ -16,7 +16,8 @@ LED_INVERT     = False    # True to invert the signal (when using NPN transistor
 LED_CHANNEL    = 0        # set to '1' for GPIOs 13, 19, 41, 45 or 53
 # Timing Configuration
 TIMING_CITY    = 'Berlin'       # City for gathering the sunset and sunrise times
-TIMING_TRANSITION = 3 * 60 * 60 # Transition time in seconds from night to sunset, sunset to day, ...
+TIMING_TRANSITION_SIM = 3 * 60 * 60 # Transition time in seconds from night to sunset, sunset to day, ... (in sim mode 5 Min.)
+TIMING_TRANSITION_DAY = 30 * 60 # Transition time in seconds in normal mode (24h)
 SIM_DURATION = 5 * 60           # Duration of a simulated day
 
 # Color settings for time of the day
@@ -52,9 +53,15 @@ areas =	{
 }
 
 def monoColor(strip, color):
+  if (color == 'off'):
+    colorCode = Color(0,0,0)
+  elif (color == 'on'):
+    colorCode = Color(255,255,255)
+  elif (color == 'red'):
+    colorCode = Color(80,80,80)
   print('switching colors...')
   for i in range(strip.numPixels()):
-    strip.setPixelColor(i, color)
+    strip.setPixelColor(i, colorCode)
   strip.show()
 
 def nightMode(strip):
@@ -99,9 +106,9 @@ def dayMode(strip):
     strip.setPixelColor(i, Color(200,200,200))
   strip.show()
 
-def colorTimer(strip, dayTime, sunrise, sunset):
+def colorTimer(strip, dayTime, sunrise, sunset, transition_timing):
   # seperated the day in 86400 Steps
-  transitionLength = TIMING_TRANSITION
+  transitionLength = transition_timing
   # night -> dawn (surise - 30 min)
   if (dayTime <= sunrise  - transitionLength):
     print('NIGHT')
@@ -159,7 +166,7 @@ def getTimeOfDayInSecondsSimulated(dayDuration):
   simulatedDayTime = currentTimeSecondsSimulated * partsOfDay
   return simulatedDayTime
 
-def simulateDay(strip, sim_activate):
+def simulateDay(strip, sim_activate, transition_timing):
   while True:
     if (sim_activate == True):
       secondsInDay = getTimeOfDayInSecondsSimulated(SIM_DURATION)
@@ -169,7 +176,7 @@ def simulateDay(strip, sim_activate):
     print('Seconds of day passed: ' + str(secondsInDay))
     sunrise, sunset = getSunTimes()
     print('Sunrise: ' + str(sunrise) + '; Sunset: ' + str(sunset))
-    colorTimer(strip, secondsInDay, sunrise, sunset)
+    colorTimer(strip, secondsInDay, sunrise, sunset, transition_timing)
     time.sleep(1)
 
 def setAllPixelsByTime(strip, lastColors, nextColors, transitionProgress):
@@ -214,7 +221,9 @@ if __name__ == '__main__':
   parser.add_argument('-d', '--day', action='store_true', help='day mode')
   parser.add_argument('-s', '--simulate', action='store_true', help='simulate day')
   parser.add_argument('-q', '--quicksim', action='store_true', help='simulate day in 5 minutes')
-  parser.add_argument('-o', '--off', action='store_true', help='switch off')
+  parser.add_argument('-f', '--off', action='store_true', help='switch off')
+  parser.add_argument('-o', '--on', action='store_true', help='switch on')
+  parser.add_argument('-e', '--red', action='store_true', help='switch red')
   args = parser.parse_args()
 
   strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
@@ -227,10 +236,12 @@ if __name__ == '__main__':
   elif args.day:
     dayMode(strip)
   elif args.simulate:
-    simulateDay(strip, False)
+    simulateDay(strip, False, TIMING_TRANSITION_DAY)
   elif args.quicksim:
-    simulateDay(strip, True)
+    simulateDay(strip, True, TIMING_TRANSITION_SIM)
   elif args.off:
-    monoColor(strip, Color(0,0,0))
-  else:
-    monoColor(strip, Color(255,255,255))
+    monoColor(strip, 'off')
+  elif args.on:
+    monoColor(strip, 'on')
+  elif args.red:
+    monoColor(strip, 'red')

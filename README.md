@@ -41,4 +41,22 @@ Sunset and sunrise times are based on the city configured.
 
 ```bash
 sudo python picture.py -s # or --simulate
+                       -q # or --quicksim (simulates one day every 5 minutes)
+```
+
+## Web-App
+
+Install Node
+```bash
+curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+sudo apt-get install -y nodejs
+node -v
+```
+
+Run on boot and restart on crash with pm2
+```bash
+sudo npm i -g pm2
+sudo pm2 startup
+sudo pm2 start server.js
+sudo pm2 save
 ```
