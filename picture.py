@@ -7,7 +7,7 @@ import datetime
 from astral import Astral
 
 # LED strip configuration:
-LED_COUNT      = 400      # Number of LED pixels.
+LED_COUNT      = 450      # Number of LED pixels.
 LED_PIN        = 18       # GPIO pin connected to the pixels (18 uses PWM!).
 LED_FREQ_HZ    = 800000   # LED signal frequency in hertz (usually 800khz)
 LED_DMA        = 10       # DMA channel to use for generating signal (try 10)
@@ -26,21 +26,25 @@ nightColors = {
   "horizon": [0,3,37],
   "sky": [0,3,37],
   "castle": [255,80,0],
-  "moon": [184,164,153]
+  "moon": [184,164,153],
+  "stripe": [255,80,0]
 }
 dayColors = {
   "castle": [150,200,200],
   "ground": [150,200,200],
   "horizon": [150,200,200],
   "sky": [150,200,200],
-  "moon": [150,200,200]
+  "moon": [150,200,200],
+  "stripe": [150,200,200]
 }
 sunriseColors = {
   "castle": [20,10,10],
   "ground": [20,10,10],
   "horizon": [255,40,0],
   "sky": [22,50,90],
-  "moon": [22,50,90]
+  "moon": [22,50,90],
+  "horizon": [255,40,0],
+  "stripe": [255,40,0]
 }
 
 # pixel areas positions on the wall picture
@@ -49,7 +53,8 @@ areas =	{
   "horizon": [[45,65],[175,215]],
   "ground": [[0,45],[215,255],[265,400]],
   "moon": [[90, 110]],
-  "castle": [[255, 265]]
+  "castle": [[255, 265]],
+  "stripe": [[400, 450]]
 }
 
 def monoColor(strip, color):
