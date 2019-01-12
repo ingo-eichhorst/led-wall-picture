@@ -5,7 +5,7 @@
 Install neopixel for raspberry pi
 ```bash
 git clone https://github.com/jgarff/rpi_ws281x
-cd /rpi_ws281x/python
+cd rpi_ws281x/python
 sudo python ./setup.py install
 cd ../../
 ```
@@ -15,6 +15,7 @@ Install and run this project
 git clone https://github.com/ingo-eichhorst/led-wall-picture
 cd led-wall-picture
 pip install -r requirements.txt
+npm install
 ```
 
 ## Start app via CLI
@@ -60,3 +61,5 @@ sudo pm2 startup
 sudo pm2 start server.js
 sudo pm2 save
 ```
+
+Access server at: http://[ip]:5000
