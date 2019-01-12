@@ -4,11 +4,16 @@
 
 Install neopixel for raspberry pi
 ```bash
+cd rpi_ws281x
+sudo apt-get install build-essential python-dev git scons swig
+scons
 git clone https://github.com/jgarff/rpi_ws281x
-cd rpi_ws281x/python
+cd python
 sudo python ./setup.py install
-cd ../../
+cd ../..
 ```
+
+Test that everything is gooing good so far run: `sudo python rpi_ws281x/examples/strandtest.py`
 
 Install and run this project
 ```bash
