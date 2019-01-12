@@ -19,7 +19,7 @@ Install and run this project
 ```bash
 git clone https://github.com/ingo-eichhorst/led-wall-picture
 cd led-wall-picture
-pip install -r requirements.txt
+sudo pip install -r requirements.txt
 npm install
 ```
 
