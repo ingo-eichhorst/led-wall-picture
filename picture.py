@@ -4,6 +4,8 @@ import time
 from neopixel import *
 import argparse
 import datetime
+import pytz
+from tzlocal import get_localzone
 from astral import Astral
 
 # LED strip configuration:
@@ -11,50 +13,51 @@ LED_COUNT      = 450      # Number of LED pixels.
 LED_PIN        = 18       # GPIO pin connected to the pixels (18 uses PWM!).
 LED_FREQ_HZ    = 800000   # LED signal frequency in hertz (usually 800khz)
 LED_DMA        = 10       # DMA channel to use for generating signal (try 10)
-LED_BRIGHTNESS = 200      # Set to 0 for darkest and 255 for brightest
+LED_BRIGHTNESS = 25       # Set to 0 for darkest and 255 for brightest
 LED_INVERT     = False    # True to invert the signal (when using NPN transistor level shift)
 LED_CHANNEL    = 0        # set to '1' for GPIOs 13, 19, 41, 45 or 53
 # Timing Configuration
-TIMING_CITY    = 'Berlin'       # City for gathering the sunset and sunrise times
+TIMING_CITY    = 'Berlin'           # City for gathering the sunset and sunrise times
+TIMEZONE       = 'Europe/Berlin'    # Your timezone
 TIMING_TRANSITION_SIM = 3 * 60 * 60 # Transition time in seconds from night to sunset, sunset to day, ... (in sim mode 5 Min.)
-TIMING_TRANSITION_DAY = 30 * 60 # Transition time in seconds in normal mode (24h)
-SIM_DURATION = 5 * 60           # Duration of a simulated day
+TIMING_TRANSITION_DAY = 60 * 60     # Transition time in seconds in normal mode (24h)
+SIM_DURATION = 5 * 60               # Duration of a simulated day
 
 # Color settings for time of the day
+# Format: R,G,B,brightness (0-255)
 nightColors = {
-  "ground": [0,0,0],
-  "horizon": [0,3,37],
-  "sky": [0,3,37],
-  "castle": [255,80,0],
-  "moon": [184,164,153],
-  "stripe": [255,80,0]
+  "ground": [0,0,0,100],
+  "horizon": [0,3,37,100],
+  "sky": [0,3,37,100],
+  "castle": [255,80,0,100],
+  "moon": [184,164,153,100],
+  "stripe": [255,80,0,100]
 }
 dayColors = {
-  "castle": [150,200,200],
-  "ground": [150,200,200],
-  "horizon": [150,200,200],
-  "sky": [150,200,200],
-  "moon": [150,200,200],
-  "stripe": [150,200,200]
+  "castle": [200,200,200,25],
+  "ground": [200,200,200,25],
+  "horizon": [200,200,200,25],
+  "sky": [200,200,200,25],
+  "moon": [200,200,200,25],
+  "stripe": [200,200,200,25]
 }
 sunriseColors = {
-  "castle": [20,10,10],
-  "ground": [20,10,10],
-  "horizon": [255,40,0],
-  "sky": [22,50,90],
-  "moon": [22,50,90],
-  "horizon": [255,40,0],
-  "stripe": [255,40,0]
+  "castle": [20,10,10,25],
+  "ground": [20,10,10,25],
+  "horizon": [255,40,0,100],
+  "sky": [22,50,90,25],
+  "moon": [22,50,90,25],
+  "stripe": [255,40,0,25]
 }
 
 # pixel areas positions on the wall picture
 areas =	{
   "sky": [[85,90],[110,175]],
   "horizon": [[45,65],[175,215]],
-  "ground": [[0,45],[215,255],[265,400]],
+  "ground": [[0,45],[215,255],[265,398]],
   "moon": [[90, 110]],
   "castle": [[255, 265]],
-  "stripe": [[400, 450]]
+  "stripe": [[399, 450]]
 }
 
 def monoColor(strip, color):
@@ -72,8 +75,11 @@ def monoColor(strip, color):
 def nightMode(strip):
   print('switching colors...')
   for i in range(strip.numPixels()):
+    # led-stripe
+    if i >= 399:
+      strip.setPixelColor(i, Color(80,255,0))
     # Moon
-    if i > 90 and i < 110:
+    elif i > 90 and i < 110:
       strip.setPixelColor(i, Color(164,184,153))
     # Light up the castle
     elif i > 255 and i < 265:
@@ -148,8 +154,8 @@ def colorTimer(strip, dayTime, sunrise, sunset, transition_timing):
     setAllPixelsByTime(strip, nightColors, nightColors, 100)
 
 def getTimeOfDayInSeconds ():
-  currentTime = datetime.datetime.now()
-  return (currentTime.hour * 60 * 60) + (currentTime.minute * 60) + currentTime.second
+  localTime = datetime.datetime.now(pytz.timezone(TIMEZONE))
+  return (localTime.hour * 60 * 60) + (localTime.minute * 60) + localTime.second
 
 def getSunTimes ():
   city_name = TIMING_CITY
@@ -171,18 +177,25 @@ def getTimeOfDayInSecondsSimulated(dayDuration):
   simulatedDayTime = currentTimeSecondsSimulated * partsOfDay
   return simulatedDayTime
 
-def simulateDay(strip, sim_activate, transition_timing):
+def secondsToDaytime(seconds):
+  hoursInDay = seconds/60/60
+  minutesInDay = (seconds/60) - (hoursInDay*60)
+  daytime = str(hoursInDay) + ':' + str(minutesInDay)
+  return daytime
+
+def simulateDay(strip, sim_activate, transition_timing, refresh_rate):
   while True:
     if (sim_activate == True):
       secondsInDay = getTimeOfDayInSecondsSimulated(SIM_DURATION)
     else:
       secondsInDay = getTimeOfDayInSeconds()
+
     print('------------------------')
-    print('Seconds of day passed: ' + str(secondsInDay))
+    print('Day time: ' + str(secondsToDaytime(secondsInDay)))
     sunrise, sunset = getSunTimes()
-    print('Sunrise: ' + str(sunrise) + '; Sunset: ' + str(sunset))
+    print('Sunrise: ' + secondsToDaytime(sunrise) + '; Sunset: ' + secondsToDaytime(sunset))
     colorTimer(strip, secondsInDay, sunrise, sunset, transition_timing)
-    time.sleep(1)
+    time.sleep(refresh_rate)
 
 def setAllPixelsByTime(strip, lastColors, nextColors, transitionProgress):
   if (transitionProgress > 100):
@@ -192,6 +205,7 @@ def setAllPixelsByTime(strip, lastColors, nextColors, transitionProgress):
   for pixel in range(strip.numPixels()):
     colors = getColorForPixel(lastColors, nextColors, pixel, transitionProgress)
     strip.setPixelColor(pixel, Color(int(colors[1]),int(colors[0]),int(colors[2])))
+    strip.setBrightness(int(colors[3]))
     lastColor = colors
   print('Color of last Pixel: ' + str(lastColor))
   strip.show()
@@ -215,7 +229,8 @@ def getColorForPixel(lastColorMap, nextColorMap, pixel, transitionProgress):
   colorArray = [
     getTransitionColor(lastColor[0],nextColor[0],transitionProgress),
     getTransitionColor(lastColor[1],nextColor[1],transitionProgress),
-    getTransitionColor(lastColor[2],nextColor[2],transitionProgress)
+    getTransitionColor(lastColor[2],nextColor[2],transitionProgress),
+    getTransitionColor(lastColor[3],nextColor[3],transitionProgress)
   ]
   return colorArray
 
@@ -241,9 +256,9 @@ if __name__ == '__main__':
   elif args.day:
     dayMode(strip)
   elif args.simulate:
-    simulateDay(strip, False, TIMING_TRANSITION_DAY)
+    simulateDay(strip, False, TIMING_TRANSITION_DAY, 5)
   elif args.quicksim:
-    simulateDay(strip, True, TIMING_TRANSITION_SIM)
+    simulateDay(strip, True, TIMING_TRANSITION_SIM, 1)
   elif args.off:
     monoColor(strip, 'off')
   elif args.on:
